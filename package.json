@@ -1,0 +1,14 @@
+{
+  "name": "mineimator-reader",
+  "version": "0.1.1",
+  "description": "A small module that can read a Mine-imator file and return an object with the data retrieved from it.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "mineimator"
+  ],
+  "author": "Flarp",
+  "license": "GPL-3.0"
+}

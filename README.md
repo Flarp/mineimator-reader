@@ -22,7 +22,7 @@ fs.readFile("./someFile.mproj", function(error, data) {
 });
 ```
 
-`output` will be an object with objects inside objects, arrays of objects, strings, numbers, booleans, it's rather messy. I can't document every last thing `output` has, because I would end up rewriting the code, but I can roughly outline what it contains.
+`output` will be an object with objects inside objects, arrays of objects, strings, numbers, booleans, it's rather messy. I can't document every last thing `output` has, because I would end up rewriting the code.
 
 I hope the names explain themselves. If not, feel free to ask me what they are, or (for bonus points!), check the Mineimator source code and see how everything lines up.
 

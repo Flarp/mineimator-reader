@@ -1,5 +1,9 @@
 # mineimator-reader
 
+```
+npm install mineimator-reader
+```
+
 Mine-imator is a Minecraft 3D animation software made in GameMaker, and stores its save files in .mproj files, in binary format. This is a quick and hacky module that can read a Mine-imator file, and return an object with the data that it got.
 
 ## Example

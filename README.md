@@ -24,22 +24,8 @@ fs.readFile("./someFile.mproj", function(error, data) {
 
 `output` will be an object with objects inside objects, arrays of objects, strings, numbers, booleans, it's rather messy. I can't document every last thing `output` has, because I would end up rewriting the code, but I can roughly outline what it contains.
 
-### Property `project_name`
+I hope the names explain themselves. If not, feel free to ask me what they are, or (for bonus points!), check the Mineimator source code and see how everything lines up.
 
-A string that has the name of the project, if one is there. 
+Again, this is very nasty, and incomplete. This won't work for every file, and you'll most certainly need a handler for errors, because they will happen. 
 
-
-### Property `project_author`
-
-A string that has the author of the project, if one is there. 
-
-
-### Property `project_description`
-
-A string that has the description of the project, if one is there.
-
-### Properties `project_video_width` and `project_video_height`
-
-Two numbers that return the width and height of the project in pixels.
-
-### Property `project
+-Flarp

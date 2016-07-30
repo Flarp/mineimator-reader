@@ -35,7 +35,7 @@
                             
                             this.preventRangeError = function(num) {
                                 if ((data.length - (current + num)) < 0) {
-                                    cb(null, new Error(`A buffer was read past its range. The current value is "${object.name}".`))
+                                    
                                     safe = false;
                                 }
                             }
@@ -183,8 +183,14 @@
                                         
                                         
                                         for (var l = 0; l < loopArr[loopArrIndex].amount; l++) {
+                                            if (!safe) {
+                                                break;
+                                            }
                                             
                                             for (var i = 0; i < object.iterate.length; i++) {
+                                                if (!safe) {
+                                                    break;
+                                                }
                                                 loopArr[loopArrIndex].placeholder[object.iterate[i].name] = this.readBuffer(object.iterate[i]);
                                             }
                                             
@@ -329,6 +335,10 @@
                                 if (safe) {
                                     obj[arguments[a].name] = this.readBuffer(arguments[a]);
                                 } else {
+                                    break;
+                                }
+                                
+                                if (!safe) {
                                     return 0;
                                 }
                                         
@@ -361,6 +371,7 @@
                             
                             if (load_format < format_100demo3) {
                                 cb(null,  new Error("Anything below Mineimator 1.0.0 Demo 3 is currently not supported. Please update the file or wait for a future release"))
+                                return 0;
                             }
                             
                         
@@ -887,6 +898,8 @@
                                     
                             if (safe) {
                                 cb(output, null);
+                            } else {
+                                cb(null, new Error(`A buffer was read past its range.`))
                             }    
     }
 

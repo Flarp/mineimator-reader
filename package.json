@@ -1,6 +1,6 @@
 {
   "name": "mineimator-reader",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A small module that can read a Mine-imator file and return an object with the data retrieved from it.",
   "main": "index.js",
   "scripts": {

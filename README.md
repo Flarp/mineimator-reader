@@ -1,7 +1,13 @@
 # mineimator-reader
 
-```
+```shell
 npm install mineimator-reader
+```
+
+or
+
+```html
+<script src="mineimator-reader.js"></script
 ```
 
 Mine-imator is a Minecraft 3D animation software made in GameMaker, and stores its save files in .mproj files, in binary format. This is a quick and hacky module that can read a Mine-imator file, and return an object with the data that it got.
@@ -15,7 +21,7 @@ const util = require("util") // Allows for the console to print nested objects i
 
 fs.readFile("./someFile.mproj", function(error, data) {
     // data now contains the buffer that will be put into the function
-    readMi.readFile(data).then((output) => console.log(output))
+    readMi.readFile(data).then((output) => util.inspect(console.log(output)))
 });
 ```
 

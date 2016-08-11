@@ -1,382 +1,165 @@
-
-        function readFile(data, cb) {
+const readMineimator = function(input) {
+    return new Promise(function(resolve, reject) {
+        if (input.constructor.name != "ArrayBuffer" && input.constructor.name != "Buffer") {
+            reject(new Error("Data must be an ArrayBuffer"))
+        } else {
             
-            if (!Buffer.isBuffer(data)) {
-                cb(null, new Error("Invalid data type. The input must be a Buffer object."))
-                return 0;
+            if (input.constructor.name == "Buffer") {
+                var env = "node"
+            } else {
+                var env = "browser"
             }
-                        var data = data;
-                        var current = 0;
-                        var loop = 0;
-                        var obj = {};
-                        var that = this;
-                        
-                        var safe = true;
-                        
-                        
-                        this.save = function() {
-                            var scope = this;
-                            this.initSave = function() {
-                                scope.save = {};
-                            }
+            let current = 0;
+            let data = new DataView(input)
+            let loop = []
+            let loopIndex = -1;
+            let save = {};
+            let bufferRead = function(object) {
+                
+                this.checks = function(val, num) {
+                    if (object.save) {
+                        save[object.name] = val
+                    }
+                    
+                    if (object.version == false) {
+                        current -= num
+                        return undefined
+                    } else {
+                        return val
+                    }
+                }
+                
+                switch(object.type) {
+                    case "byte":
+                        {
+                            let returnObj = {};
+                            let value = env == "browser" ? data.getInt8(current) : data[current]
+                            current++
+                            returnObj[object.name] = this.checks(value, 1)
                             
-                            this.setSave = function(objekt, value) {
-                                scope.save[objekt.name] = value;
-                            }
+                            return returnObj
+                            
                         }
                         
-                        var saveFunc = new this.save();
-                        saveFunc.initSave();
-                        
-                        
-                        
-                        this.readBuffer = function(object) {
-                            var value;
-                            
-                            this.preventRangeError = function(num) {
-                                if ((data.length - (current + num)) < 0) {
-                                    
-                                    safe = false;
-                                }
+                    case "string": 
+                        {
+                            let returnObj = {}
+                            let length =  env == "browser" ? data.getInt32(current, true) : data.readInt32LE(current)
+                            current += 4;
+                            let charBytes = new Int8Array(length);
+                            for (let x = 0; x < length; x++) {
+                                charBytes[x] = env == "browser" ? data.getInt8(current + x) : data[(current + x)]
                             }
+                            let value = "";
+                            current += length;
+                            charBytes.map(charByte => value += String.fromCharCode(charByte))
+                            returnObj[object.name] = this.checks(value, (4 + length))
                             
+                            return returnObj
+                        }
+                        
+                        
+                    case "int":
+                    case "iid":    
+                        {
+                            let returnObj = {};
+                            let value = env == "browser" ? data.getInt32(current, true) : data.readInt32LE(current);
+                            current += 4
+                            returnObj[object.name] = this.checks(value, 4)
+                            return returnObj
+                        }
+                    case "double":
+                        {
+                            let returnObj = {};
+                            let value = env == "browser" ? data.getFloat64(current) : data.readDoubleLE(current)
+                            current += 8
+                            returnObj[object.name] = this.checks(value, 8)
+                            return returnObj;
+                        }
+                    case "short":
+                        {
+                            let returnObj = {};
+                            let value = env == "browser" ? data.getInt16(current) : data.readInt16LE(current)
+                            current += 2;
+                            returnObj[object.name] = this.checks(value, 2);
+                            return returnObj;
+                        }
+                    case "loop":
+                        {
+                            loopIndex++
+                            loop[loopIndex] = {};
+                            let amount = bufferRead(object.options)
+                            loop[loopIndex].amount = amount[object.options.name]
+                           
                             
-                            
-                            this.outputIfTrue = function(num) {
-                                if (object.output == true) {
-                                    console.log( { type: object.type, name: object.name, buffer: data.slice(current, (current + num)), data: value } );
-                                }
+                            loop[loopIndex].content = [];
+                            for (let x = 0; x < loop[loopIndex].amount; x++) {
+                                loop[loopIndex].placeholder = {};
+                                object.iterate.map(obj => Object.assign(loop[loopIndex].placeholder, bufferRead(obj)))
+                                loop[loopIndex].content.push(loop[loopIndex].placeholder)
                             }
-                            
-                            
-                            
-                            this.saveValue = function() {
-                                if (object.save == true) {
-                                    saveFunc.setSave(object, value);
+                            let returnObj = {}
+                            returnObj[object.name] = this.checks(loop[loopIndex].content)
+                            loopIndex--
+                            return returnObj;
+                        }
+                        
+                    case "onlyIf":
+                        {
+                            let onlyIfObj = {};
+                            if (object.onlyIf) {
+                                object.iterate.map(obj => Object.assign(onlyIfObj, bufferRead(obj)))
+                            } else if (object.key && object.equals) {
+                                if (save[object.key] == object.equals) {
+                                    object.iterate.map(obj => Object.assign(onlyIfObj, bufferRead(obj)))
                                 }
-                                
-                                
-                                
+                            } else {
+                                break;
                             }
-                            
-                            
-                                
-                            
-                            
-                            
-                            
-                            if (object != undefined) {
-                                switch (object.type) {
-                                    
-                                case "byte":
-                                    
-                               if ((typeof object.version != "undefined" && object.version) || object.version == undefined) {
-                                    this.preventRangeError(1);
-                                    value = data[current];
-                                    this.outputIfTrue(1);
-                                    current++;
-                                    this.saveValue();
-                                } else {
-                                    value = undefined
-                                }
-                                    return value;
-                                    
-                                    
-                                case "string":
-                                    if ((typeof object.version != "undefined" && object.version) || object.version == undefined) {
-                                        this.preventRangeError(4);
-                                        var length = data.readInt32LE(current);
-                                        current += 4;
-                                        var string = "";
-                                        this.preventRangeError(length);
-                                        
-                                        this.outputIfTrue(length);
-                                        
-                                        
-                                        for (var s = current; s < (current + length); s++) {
-                                            string += String.fromCharCode(data[s]);
-                                            
-                                        }
-                                        
-                                        current += length
-                                        value = string;
-                                        this.saveValue();
-                                    } else {
-                                        value = undefined
-                                    }
-                                    
-                                    
-                                    return value;
-                                    
-                                    
-                                case "int":
-                                    
-                                    if ((typeof object.version != "undefined" && object.version) || object.version == undefined) {
-                                        this.preventRangeError(4);
-                                        value = data.readInt32LE(current);
-                                        this.outputIfTrue(4);
-                                        current += 4;
-                                        this.saveValue();
-                                    } else {
-                                        value = undefined
-                                    }
-                                    
-                                    return value;
-                                    
-                                case "short":
-                                    
-                                    if ((typeof object.version != "undefined" && object.version) || object.version == undefined) {
-                                        this.preventRangeError(2);
-                                        value = data.readInt16LE(current);
-                                        this.outputIfTrue(2);
-                                        current += 2;
-                                        this.saveValue();
-                                    } else {
-                                        value = undefined
-                                    }
-                                    
-                                    return value;
-                                    
-                                case "double":
-                                    if ((typeof object.version != "undefined" && object.version) || object.version == undefined) {
-                                        this.preventRangeError(8);
-                                        value = data.readDoubleLE(current);
-                                        this.outputIfTrue(8);
-                                        current += 8;
-                                        this.saveValue();
-                                    } else {
-                                        value = undefined
-                                    }
-                                    
-                                   
-                                    return value;
-                                    
-                                case "iid":
-                                    
-                                    if ((typeof object.version != "undefined" && object.version) || object.version == undefined) {
-                                        this.preventRangeError(4);
-                                        value = data.readInt32LE(current);
-                                        var val = Math.max(val, value);
-                                        this.outputIfTrue(4);
-                                        current += 4;
-                                        this.saveValue();
-                                        return value; 
-                                    } else {
-                                        value = undefined
-                                    }
-                                    
-                                    
-                                    
-                                case "const":
-                                    return object.num;
-                                    
-                                
-                                    
-                                    
-                                    
-                                case "loop":
-                                    
-                                        
-                                        
-                                        loopArrIndex++;
-                                        loopArr[loopArrIndex] = { amount: this.readBuffer(object.options), content: [], placeholder: {} };
-                                        
-                                        
-                                        for (var l = 0; l < loopArr[loopArrIndex].amount; l++) {
-                                            if (!safe) {
-                                                break;
-                                            }
-                                            
-                                            for (var i = 0; i < object.iterate.length; i++) {
-                                                if (!safe) {
-                                                    break;
-                                                }
-                                                loopArr[loopArrIndex].placeholder[object.iterate[i].name] = this.readBuffer(object.iterate[i]);
-                                            }
-                                            
-                                            loopArr[loopArrIndex].content.push(loopArr[loopArrIndex].placeholder);
-                                            loopArr[loopArrIndex].placeholder = [];
-                                            
-                                        }
-                                        
-                                        loopArrIndex--;
-                                        return loopArr[(loopArrIndex + 1)].content;
-                                    
-                                
-                                    
-                                case "onlyIf":
-                                    var ifObj = {};
-                                    
-                                    if (saveFunc.save[object.key] == object.equals && object.key != undefined) {
-                                        for (var onlyIf = 0; onlyIf < object.iterate.length; onlyIf++) {
-                                            ifObj[object.iterate[onlyIf].name] = this.readBuffer(object.iterate[onlyIf]);
-                                        }
-                                    } else {
-                                        
-                                    }
-                                    
-                                    return ifObj;
-                                    
-                                
-                                    
-                                case "output":
-                                    return data.slice(current, (current + object.amount));
-                                    
-                                case "char":
-                                    var evaluate = this.readBuffer(object.options);
-                                    if (evaluate <= 19) {
-                                        switch(evaluate) {
-                                            case 0: return "characterhuman";
-                                            case 1: return "characterzombie";
-                                            case 2: return "characterskeleton";
-                                            case 3: return "charactercreeper";
-                                            case 4: return "characterspider";
-                                            case 5: return "characterenderman";
-                                            case 6: return "characterslime";
-                                            case 7: return "characterghast";
-                                            case 8: return "characterzombiepigman";
-                                            case 9: return "characterchicken";
-                                            case 10: return "charactercow";
-                                            case 11: return "charactermooshroom";
-                                            case 12: return "characterpig";
-                                            case 13: return "charactersheep";
-                                            case 14: return "charactersquid";
-                                            case 15: return "charactervillager";
-                                            case 16: return "characterocelot";
-                                            case 17: return "characterwolf";
-                                            case 18: return "characterirongolem";
-                                            case 19: return "charactersnowman";
-                                        }
-                                    } else if (load_format == format_05) {
-                                        switch(evaluate) {
-                                            case 20: return "characterhuman";
-                                            case 21: return "characterpig";
-                                        }
-                                    } else if (load_format <= format_07demo) {
-                                        switch(evaluate) {
-                                            case 20: return "charactersilverfish"
-                                            case 21: return "characterbat"
-                                            case 22: return "characterzombievillager"
-                                            case 23: return "characterwitch"
-                                            case 24: return "charactercavespider"
-                                            case 25: return "characterwitherskeleton"
-                                            case 26: return "characterwither"
-                                            case 27: return "characterhuman" 
-                                            case 28: return "characterpig" 
-                                            case 29: return "specialblockchest"
-                                            case 30: return "specialblocklargechest"
-                                            case 31: return "specialblocklever"
-                                            case 32: return "specialblockpiston"
-                                            case 33: return "specialblockstickypiston"
-                                            case 34: return "specialblockarrow"
-                                            case 35: return "specialblockboat"
-                                            case 36: return "specialblockminecart"
-                                        }
-                                    } else {
-                                        switch(evaluate) {
-                                            case 20: return "charactersilverfish"
-                                            case 21: return "characterbat"
-                                            case 22: return "characterzombievillager"
-                                            case 23: return "characterwitch"
-                                            case 24: return "charactercavespider"
-                                            case 25: return "characterwitherskeleton"
-                                            case 26: return "characterwither"
-                                            case 27: return "characterblaze"
-                                            case 28: return "charactermagmacube"
-                                            case 29: return "characterhorse"
-                                            case 30: return "characterdonkey"
-                                            case 31: return "characterenderdragon"
-                                            case 32: return "specialblockchest"
-                                            case 33: return "specialblocklargechest"
-                                            case 34: return "specialblocklever"
-                                            case 35: return "specialblockpiston"
-                                            case 36: return "specialblockstickypiston"
-                                            case 37: return "specialblockarrow"
-                                            case 38: return "specialblockboat"
-                                            case 39: return "specialblockminecart"
-                                            case 40: return "specialblockenchantmenttable"
-                                            case 41: return "specialblocksignpost"
-                                            case 42: return "specialblockwallsign"
-                                            case 43: return "specialblockboat" 
-                                            case 44: return "specialblockboat" 
-                                            case 45: return "specialblockboat" 
-                                            case 46: return "specialblockendercrystal"
-                                            case 47: return "specialblockcamera"
-                                        }
-                                    }
-                                    
-                                    
-                                    break;
-                                    
-                                    
-                                    
-                                
-                            
-                                }
-                            }
-                            
-                            
-                                    
-                                    
-                        };
+                        }
+                        break;
                         
-                        var loopArr = [];
-                        var loopArrIndex = -1;
-                        
-                       
-                        this.bufferOrder = function() {
-                            
-                            
-                            
-                            var obj = {};
-                            
-                            
-                            for (var a = 0; a < arguments.length; a++) {
-                                if (safe) {
-                                    obj[arguments[a].name] = this.readBuffer(arguments[a]);
-                                } else {
-                                    break;
-                                }
-                                
-                                if (!safe) {
-                                    return 0;
-                                }
-                                        
-                            }
-                            return obj;
-                        };
-                        
-                            var format_01 = 1;
-                            var format_02 = 2;
-                            var format_05 = 3;
-                            var format_06 = 4;
-                            var format_07demo = 5;
-                            var format_100demo2 = 6;
-                            var format_100demo3 = 7;
-                            var format_100demo4 = 8;
-                            var format_100debug = 9;
-                            var format_100 = 10;
-                            var format_105 = 11;
-                            var format_105_2 = 12;
-                            var format_106 = 13;
-                            
-                            
-                            
-                            
-                            
-                            
+                    case "const":
+                        {
+                            let returnObj = {}
+                            returnObj[object.name] = object.num
+                            return returnObj
+                        }
                         
                         
-                            var load_format = this.readBuffer({ type: "byte" })
-                            
-                            if (load_format < format_100demo3) {
-                                cb(null,  new Error("Anything below Mineimator 1.0.0 Demo 3 is currently not supported. Please update the file or wait for a future release"))
-                                return 0;
-                            }
-                            
                         
-                                var output = this.bufferOrder(
-                                { type: "string", name: "project_name" },
+                        
+                        
+                }
+                
+            }
+            
+            let bufferOrder = function() {
+                let obj = {};
+                for (let key in arguments) {
+                    Object.assign(obj, bufferRead(arguments[key]))
+                }
+                return obj
+            }
+            
+            let load_format = bufferRead({type:"byte", name:"version"}).version
+            
+            
+            let format_01 = 1;
+            let format_02 = 2;
+            let format_05 = 3;
+            let format_06 = 4;
+            let format_07demo = 5;
+            let format_100demo2 = 6
+            let format_100demo3 = 7;
+            let format_100demo4 = 8;
+            let format_100debug = 9;
+            let format_100 = 10;
+            let format_105 = 11;
+            let format_105_2 = 12;
+            let format_106 = 13;
+            
+            resolve(bufferOrder( { type: "string", name: "project_name" },
                                 { type: "string", name: "project_author" },
                                 { type: "string", name: "project_description" },
                                 { type: "byte", name: "project_video_template", version: (load_format<format_100debug)},
@@ -562,7 +345,7 @@
                                     { type: "int", name: "depth" },
                                     { type: "short", name: "bodypart" },
                                     { type: "iid", name: "part_of" },
-                                    { type: "loop", name: "part_amount", options: {type: "short"}, iterate: [
+                                    { type: "loop", name: "part_amount", options: {type: "short", name:"part_amount_num"}, iterate: [
                                         { type: "iid", name: "part" }
                                         ]},
                                         
@@ -894,15 +677,12 @@
                                         { type: "double", name: "work_roll" },
                                         { type: "double", name: "work_zoom" },
                                         
-                                    ]});
-                                    
-                            if (safe) {
-                                cb(output, null);
-                            } else {
-                                cb(null, new Error(`A buffer was read past its range.`))
-                            }    
-    }
+                                    ]}))
+            
+        }
+    })
+}
 
 module.exports = {
-    readFile: readFile
+    readMineimator: readMineimator
 }

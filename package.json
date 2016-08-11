@@ -1,11 +1,8 @@
 {
   "name": "mineimator-reader",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "A small module that can read a Mine-imator file and return an object with the data retrieved from it.",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "main": "mineimator-reader.js",
   "tonicExampleFilename": "example.js",
   "keywords": [
     "mineimator"

@@ -71,7 +71,7 @@ const readMineimator = function(input) {
                     case "double":
                         {
                             let returnObj = {};
-                            let value = env == "browser" ? data.getFloat64(current) : data.readDoubleLE(current)
+                            let value = env == "browser" ? data.getFloat64(current, true) : data.readDoubleLE(current)
                             current += 8
                             returnObj[object.name] = this.checks(value, 8)
                             return returnObj;
@@ -79,7 +79,7 @@ const readMineimator = function(input) {
                     case "short":
                         {
                             let returnObj = {};
-                            let value = env == "browser" ? data.getInt16(current) : data.readInt16LE(current)
+                            let value = env == "browser" ? data.getInt16(current, true) : data.readInt16LE(current)
                             current += 2;
                             returnObj[object.name] = this.checks(value, 2);
                             return returnObj;
@@ -144,6 +144,7 @@ const readMineimator = function(input) {
             
             let load_format = bufferRead({type:"byte", name:"version"}).version
             
+            console.log({load_format})
             
             let format_01 = 1;
             let format_02 = 2;
@@ -158,6 +159,10 @@ const readMineimator = function(input) {
             let format_105 = 11;
             let format_105_2 = 12;
             let format_106 = 13;
+            
+            if (load_format < format_100) {
+                reject("The project you are trying to load comes from a Mine-imator version that is too old. Please upgrade to the latest version and try again.")
+            }
             
             resolve(bufferOrder( { type: "string", name: "project_name" },
                                 { type: "string", name: "project_author" },

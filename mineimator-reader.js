@@ -6,11 +6,12 @@ const readMineimator = function(input) {
             
             if (input.constructor.name == "Buffer") {
                 var env = "node"
+                var data = input
             } else {
                 var env = "browser"
+                var data = new DataView(input)
             }
             let current = 0;
-            let data = new DataView(input)
             let loop = []
             let loopIndex = -1;
             let save = {};
@@ -619,7 +620,7 @@ const readMineimator = function(input) {
                                         { type: "byte", name: "is_skin" },
                                         { type: "string", name: "pack_description" },
                                         { type: "byte", name: "block_frames" },
-                                        { type: "onlyIf", name: "block_ani", key: "type", equals: (32*16), iterate: [
+                                        { type: "onlyIf", name: "block_ani", key: "type", equals: "pack", iterate: [
                                             { type: "loop", name: "block", options: { type: "const", num: (32*16) }, iterate: [
                                                 { type: "byte", name: "block_ani" },
                                                 ]},
@@ -688,6 +689,4 @@ const readMineimator = function(input) {
     })
 }
 
-module.exports = {
-    readMineimator: readMineimator
-}
+module.exports = readMineimator

@@ -18,12 +18,12 @@ Mine-imator is a Minecraft 3D animation software made in GameMaker, and stores i
 
 ```javascript
 const fs = require("fs");
-const readMi = require("mineimator-reader");
+const readMi = require("mineimator-reader"); // exports a single function
 const util = require("util") // Allows for the console to print nested objects instead of [Object]
 
 fs.readFile("./someFile.mproj", function(error, data) {
     // data now contains the buffer that will be put into the function
-    readMi.readMineimator(data).then((output) => util.inspect(console.log(output)))
+    readMi(data).then((output) => util.inspect(console.log(output))).catch((error) => console.error(error))
 });
 ```
 
@@ -38,7 +38,7 @@ fileInputElement.addEventListener("change", function(event) {
     reader.readAsArrayBuffer(file)
 
     reader.onload = function(e) {
-        readMineimator(e.target.result).then((output) => console.dir(output))
+        readMineimator(e.target.result).then((output) => console.dir(output)).catch((error) => console.error(error))
     }
 }
 ```
